@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { useRw10 } from '@/context/Rw10Context';
+import { ModalId } from '@/types/rw10';
 import { BERITA_CATEGORIES, DEFAULT_BERITA_IMG, UMKM_CATEGORIES } from '@/lib/defaultData';
 import {
   formatRupiah,
@@ -31,7 +32,19 @@ export default function PublicPortal() {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [heroSearch, setHeroSearch] = useState('');
   const [activeBeritaCategory, setActiveBeritaCategory] = useState<string>('ALL');
-  const [countdown, setCountdown] = useState({ days: '00', hours: '00', mins: '00' });
+  const [countdown, setCountdown] = useState<{
+    title: string;
+    modalId: ModalId;
+    days: string;
+    hours: string;
+    mins: string;
+  }>({
+    title: 'Rapat Koordinasi Bulanan Pengurus RW & RT',
+    modalId: 'modal-agenda-rapat',
+    days: '00',
+    hours: '00',
+    mins: '00',
+  });
 
   useEffect(() => {
     const closeDropdowns = (e: MouseEvent) => {
@@ -45,17 +58,46 @@ export default function PublicPortal() {
   }, []);
 
   useEffect(() => {
-    const targetDate = new Date('2026-11-22T07:00:00+07:00').getTime();
+    const upcomingEvents = [
+      {
+        title: 'Kerja Bakti Rutin & Fogging Serentak',
+        date: '2026-11-22T07:00:00+07:00',
+        modalId: 'modal-agenda-kerjabakti' as const,
+      },
+      {
+        title: 'Rapat Koordinasi Bulanan Pengurus RW & RT',
+        date: '2026-11-28T19:30:00+07:00',
+        modalId: 'modal-agenda-rapat' as const,
+      },
+      {
+        title: 'Senam Sehat Bersama & Bazar Kuliner UMKM',
+        date: '2026-12-06T06:30:00+07:00',
+        modalId: 'modal-agenda-even' as const,
+      },
+    ];
+
     const update = () => {
-      const dist = targetDate - Date.now();
+      const now = Date.now();
+      const nextEvent =
+        upcomingEvents.find((ev) => new Date(ev.date).getTime() > now) ||
+        upcomingEvents[upcomingEvents.length - 1];
+      const dist = new Date(nextEvent.date).getTime() - now;
       if (dist <= 0) {
-        setCountdown({ days: '00', hours: '00', mins: '00' });
+        setCountdown({
+          title: nextEvent.title,
+          modalId: nextEvent.modalId,
+          days: '00',
+          hours: '00',
+          mins: '00',
+        });
         return;
       }
       const d = Math.floor(dist / (1000 * 60 * 60 * 24));
       const h = Math.floor((dist % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
       const m = Math.floor((dist % (1000 * 60 * 60)) / (1000 * 60));
       setCountdown({
+        title: nextEvent.title,
+        modalId: nextEvent.modalId,
         days: String(d).padStart(2, '0'),
         hours: String(h).padStart(2, '0'),
         mins: String(m).padStart(2, '0'),
@@ -749,8 +791,8 @@ export default function PublicPortal() {
                       type="text"
                       value={heroSearch}
                       onChange={(e) => setHeroSearch(e.target.value)}
-                      placeholder="Masukkan Kode Surat (RW10-2026-001) atau ID Warga (RW10-01A04-01)..."
-                      className="w-full pl-4 pr-14 py-3.5 rounded-2xl text-slate-800 bg-white/95 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 shadow-xl font-medium"
+                      placeholder="Kode Surat / ID Warga (cth: RW10-2026-001)"
+                      className="w-full pl-4 pr-16 py-3.5 rounded-2xl text-slate-800 bg-white/95 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 shadow-xl font-medium"
                     />
                     <button
                       type="button"
@@ -957,7 +999,7 @@ export default function PublicPortal() {
                   Agenda Lingkungan Terdekat
                 </span>
                 <h4 className="font-extrabold text-sm sm:text-base">
-                  Kerja Bakti Rutin &amp; Fogging Serentak
+                  {countdown.title}
                 </h4>
               </div>
             </div>
@@ -980,7 +1022,7 @@ export default function PublicPortal() {
               </div>
               <button
                 type="button"
-                onClick={() => openModal('modal-agenda-kerjabakti')}
+                onClick={() => openModal(countdown.modalId)}
                 className="px-3.5 py-2 rounded-xl bg-white text-emerald-900 font-bold text-xs hover:bg-emerald-50 transition shadow shrink-0"
               >
                 Detail Kegiatan
@@ -1285,6 +1327,51 @@ export default function PublicPortal() {
               >
                 <i className="fa-regular fa-calendar-check text-emerald-600" /> Lihat Semua Agenda &amp;
                 Tambahkan ke Kalender
+              </button>
+            </div>
+
+            {/* Info Rutin Lingkungan (Mengimbangi Tinggi Kolom Berita) */}
+            <div className="bg-gradient-to-br from-slate-900 to-emerald-950 text-white rounded-3xl p-5 shadow-sm space-y-4">
+              <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                <div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-300">
+                    Jadwal Rutin RW 10
+                  </span>
+                  <h3 className="font-extrabold text-base mt-0.5">Info Layanan Lingkungan</h3>
+                </div>
+                <div className="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-300 flex items-center justify-center">
+                  <i className="fa-solid fa-clock" />
+                </div>
+              </div>
+              <div className="space-y-3 text-xs">
+                <div className="flex items-start gap-3 p-2.5 rounded-2xl bg-white/5 border border-white/10">
+                  <i className="fa-solid fa-dumpster text-amber-400 mt-0.5 shrink-0" />
+                  <div>
+                    <p className="font-bold text-white">Angkut Sampah Rumah Tangga</p>
+                    <p className="text-slate-300 mt-0.5">Selasa, Kamis &amp; Sabtu • 06.30 WIB</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3 p-2.5 rounded-2xl bg-white/5 border border-white/10">
+                  <i className="fa-solid fa-recycle text-teal-400 mt-0.5 shrink-0" />
+                  <div>
+                    <p className="font-bold text-white">Bank Sampah &ldquo;Berkah&rdquo;</p>
+                    <p className="text-slate-300 mt-0.5">Minggu Pekan ke-2 &amp; ke-4 • Halaman GSG</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3 p-2.5 rounded-2xl bg-white/5 border border-white/10">
+                  <i className="fa-solid fa-shield-halved text-sky-400 mt-0.5 shrink-0" />
+                  <div>
+                    <p className="font-bold text-white">Portal Keamanan Malam</p>
+                    <p className="text-slate-300 mt-0.5">Tutup otomatis pukul 23.00 – 05.00 WIB</p>
+                  </div>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => openModal('modal-peraturan')}
+                className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition flex items-center justify-center gap-1.5"
+              >
+                <i className="fa-solid fa-scale-balanced" /> Baca Tata Tertib RW 10
               </button>
             </div>
           </section>
