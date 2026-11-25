@@ -719,7 +719,7 @@ export default function PublicPortal() {
           }}
         />
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 relative z-10 w-full">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-14 pb-20 md:pt-20 md:pb-24 relative z-10 w-full">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
             <div className="lg:col-span-7 space-y-6">
               <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-xs font-semibold backdrop-blur-md">
@@ -854,52 +854,8 @@ export default function PublicPortal() {
         </div>
       </section>
 
-      {/* LIVE EVENT COUNTDOWN BANNER */}
-      <section className="bg-gradient-to-r from-emerald-800 via-teal-800 to-emerald-900 text-white border-y border-emerald-700/50 py-3.5 px-4 shadow-sm relative z-30">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3 text-sm">
-          <div className="flex items-center gap-3">
-            <span className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center text-white shrink-0">
-              <i className="fa-solid fa-calendar-check" />
-            </span>
-            <div>
-              <span className="text-xs font-bold uppercase tracking-wider text-emerald-200">
-                Agenda Lingkungan Terdekat:
-              </span>
-              <h4 className="font-extrabold text-sm sm:text-base">
-                Kerja Bakti Rutin &amp; Fogging Serentak
-              </h4>
-            </div>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-1.5 font-mono font-black text-xs sm:text-sm">
-              <div className="bg-black/30 px-2.5 py-1 rounded-lg">
-                <span>{countdown.days}</span>{' '}
-                <span className="text-[9px] font-sans text-emerald-200">Hari</span>
-              </div>
-              <span>:</span>
-              <div className="bg-black/30 px-2.5 py-1 rounded-lg">
-                <span>{countdown.hours}</span>{' '}
-                <span className="text-[9px] font-sans text-emerald-200">Jam</span>
-              </div>
-              <span>:</span>
-              <div className="bg-black/30 px-2.5 py-1 rounded-lg">
-                <span>{countdown.mins}</span>{' '}
-                <span className="text-[9px] font-sans text-emerald-200">Mnt</span>
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => openModal('modal-agenda-kerjabakti')}
-              className="px-3 py-1.5 rounded-xl bg-white text-emerald-900 font-bold text-xs hover:bg-emerald-50 transition shadow"
-            >
-              Detail Kegiatan
-            </button>
-          </div>
-        </div>
-      </section>
-
       {/* 6 QUICK ACTION SHORTCUT CARDS */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6 sm:-mt-8 relative z-20 w-full">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-10 relative z-20 w-full">
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
           <button
             type="button"
@@ -988,7 +944,50 @@ export default function PublicPortal() {
       </section>
 
       {/* MAIN HOMEPAGE CONTENT */}
-      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-14 w-full">
+      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12 space-y-12 w-full">
+        {/* LIVE EVENT COUNTDOWN BANNER */}
+        <section className="bg-gradient-to-r from-emerald-800 via-teal-800 to-emerald-900 text-white rounded-3xl border border-emerald-700/50 py-4 px-5 sm:px-6 shadow-md">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-3 text-sm">
+            <div className="flex items-center gap-3">
+              <span className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center text-emerald-200 shrink-0">
+                <i className="fa-solid fa-calendar-check text-lg" />
+              </span>
+              <div>
+                <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-200">
+                  Agenda Lingkungan Terdekat
+                </span>
+                <h4 className="font-extrabold text-sm sm:text-base">
+                  Kerja Bakti Rutin &amp; Fogging Serentak
+                </h4>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="flex items-center gap-1.5 font-mono font-black text-xs sm:text-sm">
+                <div className="bg-black/30 px-2.5 py-1.5 rounded-xl">
+                  <span>{countdown.days}</span>{' '}
+                  <span className="text-[9px] font-sans text-emerald-200">Hari</span>
+                </div>
+                <span>:</span>
+                <div className="bg-black/30 px-2.5 py-1.5 rounded-xl">
+                  <span>{countdown.hours}</span>{' '}
+                  <span className="text-[9px] font-sans text-emerald-200">Jam</span>
+                </div>
+                <span>:</span>
+                <div className="bg-black/30 px-2.5 py-1.5 rounded-xl">
+                  <span>{countdown.mins}</span>{' '}
+                  <span className="text-[9px] font-sans text-emerald-200">Mnt</span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => openModal('modal-agenda-kerjabakti')}
+                className="px-3.5 py-2 rounded-xl bg-white text-emerald-900 font-bold text-xs hover:bg-emerald-50 transition shadow shrink-0"
+              >
+                Detail Kegiatan
+              </button>
+            </div>
+          </div>
+        </section>
         {/* TRANSPARANSI KEUANGAN RW SUMMARY BANNER */}
         <section
           id="transparansi-keuangan"
@@ -1226,7 +1225,7 @@ export default function PublicPortal() {
                 onClick={() => openModal('modal-agenda-kerjabakti')}
                 className="flex gap-4 items-start p-3.5 rounded-2xl hover:bg-emerald-50/80 cursor-pointer transition border border-transparent hover:border-emerald-200 group"
               >
-                <div className="px-3 py-2 rounded-2xl bg-emerald-100 text-emerald-800 flex flex-col items-center justify-center shrink-0 font-bold group-hover:bg-emerald-600 group-hover:text-white transition">
+                <div className="w-14 h-14 rounded-2xl bg-emerald-100 text-emerald-800 flex flex-col items-center justify-center shrink-0 font-bold group-hover:bg-emerald-600 group-hover:text-white transition">
                   <span className="text-[10px] uppercase leading-none font-extrabold">Nov</span>
                   <span className="text-xl leading-tight font-black">22</span>
                 </div>
@@ -1245,7 +1244,7 @@ export default function PublicPortal() {
                 onClick={() => openModal('modal-agenda-rapat')}
                 className="flex gap-4 items-start p-3.5 rounded-2xl hover:bg-teal-50/80 cursor-pointer transition border-t border-slate-100 group"
               >
-                <div className="px-3 py-2 rounded-2xl bg-teal-100 text-teal-800 flex flex-col items-center justify-center shrink-0 font-bold group-hover:bg-teal-600 group-hover:text-white transition">
+                <div className="w-14 h-14 rounded-2xl bg-teal-100 text-teal-800 flex flex-col items-center justify-center shrink-0 font-bold group-hover:bg-teal-600 group-hover:text-white transition">
                   <span className="text-[10px] uppercase leading-none font-extrabold">Nov</span>
                   <span className="text-xl leading-tight font-black">28</span>
                 </div>
@@ -1264,7 +1263,7 @@ export default function PublicPortal() {
                 onClick={() => openModal('modal-agenda-even')}
                 className="flex gap-4 items-start p-3.5 rounded-2xl hover:bg-amber-50/80 cursor-pointer transition border-t border-slate-100 group"
               >
-                <div className="px-3 py-2 rounded-2xl bg-amber-100 text-amber-800 flex flex-col items-center justify-center shrink-0 font-bold group-hover:bg-amber-500 group-hover:text-white transition">
+                <div className="w-14 h-14 rounded-2xl bg-amber-100 text-amber-800 flex flex-col items-center justify-center shrink-0 font-bold group-hover:bg-amber-500 group-hover:text-white transition">
                   <span className="text-[10px] uppercase leading-none font-extrabold">Des</span>
                   <span className="text-xl leading-tight font-black">06</span>
                 </div>
@@ -1489,7 +1488,25 @@ export default function PublicPortal() {
         </section>
 
         {/* FASILITAS LINGKUNGAN PREVIEW */}
-        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <section className="space-y-5">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2">
+            <div>
+              <span className="text-xs font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full">
+                Sarana &amp; Prasarana
+              </span>
+              <h2 className="text-2xl font-black text-slate-900 mt-2">
+                Fasilitas Lingkungan RW 10
+              </h2>
+            </div>
+            <button
+              type="button"
+              onClick={() => openModal('modal-fasilitas')}
+              className="text-xs sm:text-sm font-bold text-emerald-700 hover:text-emerald-800 flex items-center gap-1 transition self-start sm:self-auto"
+            >
+              Semua Fasilitas <i className="fa-solid fa-chevron-right text-[10px]" />
+            </button>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div
             onClick={() => openModal('modal-gsg')}
             className="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm hover:shadow-md transition cursor-pointer group"
@@ -1552,6 +1569,7 @@ export default function PublicPortal() {
             <span className="inline-block mt-3 text-xs font-bold text-sky-700 group-hover:underline">
               Hubungi Pos Jaga &rarr;
             </span>
+          </div>
           </div>
         </section>
       </main>
