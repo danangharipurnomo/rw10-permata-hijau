@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import ModalWrapper from '@/components/ModalWrapper';
 import { useRw10 } from '@/context/Rw10Context';
 import { DEFAULT_BERITA_IMG, RT_LIST, UMKM_CATEGORIES } from '@/lib/defaultData';
@@ -16,6 +16,7 @@ import { RtKey } from '@/types/rw10';
 
 export default function PublicModals() {
   const {
+    activeModal,
     closeModal,
     openModal,
     pengurusRw,
@@ -29,6 +30,7 @@ export default function PublicModals() {
     berita,
     umkm,
     setUmkm,
+    cctv,
     serviceJenis,
     openServiceModal,
     regSuccessData,
@@ -76,6 +78,32 @@ export default function PublicModals() {
   // Login Form State
   const [loginUser, setLoginUser] = useState('');
   const [loginPass, setLoginPass] = useState('');
+
+  // CCTV Live Clock
+  const [cctvTime, setCctvTime] = useState({ header: '--:--:-- WIB', cam: '--:--:-- WIB' });
+
+  useEffect(() => {
+    if (activeModal !== 'modal-cctv') return;
+    const tick = () => {
+      const now = new Date();
+      const timeStr = `${now.toLocaleTimeString('id-ID', { hour12: false })} WIB`;
+      const dateStr = now.toLocaleDateString('id-ID', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+      });
+      setCctvTime({
+        header: `${dateStr} • ${timeStr}`,
+        cam: `${dateStr} ${timeStr}`,
+      });
+    };
+    const raf = window.requestAnimationFrame(tick);
+    const id = window.setInterval(tick, 1000);
+    return () => {
+      window.cancelAnimationFrame(raf);
+      window.clearInterval(id);
+    };
+  }, [activeModal]);
 
   // Smart ID Warga + PIN (HHBB) Lookup
   const tryLookupWarga = (nextId: string, nextPin: string) => {
@@ -2003,6 +2031,131 @@ export default function PublicModals() {
               <p>&bull; Polsek Mojotengah: (0286) 321110</p>
               <p>&bull; Pemadam Kebakaran Wonosobo: (0286) 321113 / 113</p>
               <p>&bull; Puskesmas Mojotengah / Ambulans: (0286) 324118</p>
+            </div>
+          </div>
+        </div>
+      </ModalWrapper>
+
+      {/* MODAL: CCTV RW 10 (4 LIVESTREAM KAMERA LINGKUNGAN) */}
+      <ModalWrapper id="modal-cctv" backdropClass="bg-slate-950/80">
+        <div className="bg-slate-950 text-white rounded-3xl max-w-6xl w-full max-h-[92vh] overflow-y-auto shadow-2xl border border-slate-800">
+          <div className="sticky top-0 bg-slate-950/95 backdrop-blur-md border-b border-slate-800 px-5 sm:px-6 py-4 flex flex-wrap justify-between items-center gap-3 z-10">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-rose-500/20 border border-rose-500/40 text-rose-400 flex items-center justify-center shrink-0">
+                <i className="fa-solid fa-video text-lg" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-black text-base sm:text-lg text-white">
+                    Pantauan CCTV RW 10 Permata Hijau
+                  </h3>
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-600 text-white animate-pulse">
+                    <span className="w-1.5 h-1.5 rounded-full bg-white" /> {cctv.length} LIVE
+                  </span>
+                </div>
+                <p className="text-xs text-slate-400">
+                  Livestream Keamanan Lingkungan 24 Jam &bull;{' '}
+                  <span className="font-mono text-emerald-400">{cctvTime.header}</span>
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={closeModal}
+              className="w-9 h-9 rounded-full bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-slate-300 hover:text-white transition"
+            >
+              <i className="fa-solid fa-xmark" />
+            </button>
+          </div>
+          <div className="p-4 sm:p-6 space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {cctv.map((cam) => {
+                const url = (cam.streamUrl || '').trim();
+                const isDirectImage = /\.(mjpg|mjpeg|jpg|jpeg|png)(\?.*)?$/i.test(url);
+                return (
+                  <div
+                    key={cam.id}
+                    className="bg-slate-900 rounded-2xl overflow-hidden border border-slate-800 shadow-lg flex flex-col"
+                  >
+                    <div className="relative aspect-video bg-black overflow-hidden">
+                      {url ? (
+                        isDirectImage ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={url}
+                            alt={cam.nama}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <iframe
+                            src={url}
+                            title={cam.nama}
+                            className="w-full h-full border-0"
+                            allow="autoplay; encrypted-media; fullscreen"
+                            allowFullScreen
+                          />
+                        )
+                      ) : (
+                        <>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={cam.poster}
+                            alt={cam.nama}
+                            className="w-full h-full object-cover opacity-80 brightness-90 contrast-110"
+                          />
+                          <div
+                            className="absolute inset-0 pointer-events-none"
+                            style={{
+                              background:
+                                'repeating-linear-gradient(0deg, rgba(0,0,0,0.12) 0px, rgba(0,0,0,0.12) 1px, transparent 1px, transparent 3px)',
+                            }}
+                          />
+                          <div className="absolute bottom-2.5 right-2.5 px-2 py-0.5 rounded bg-black/70 border border-white/15 text-[10px] font-mono text-amber-300">
+                            PRATINJAU SIMULASI
+                          </div>
+                        </>
+                      )}
+                      <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-black/70 backdrop-blur-sm border border-white/10 text-[10px] font-mono font-bold text-white">
+                        <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+                        <span>REC</span>
+                        <span className="text-slate-400">|</span>
+                        <span className="text-emerald-400">{cam.id}</span>
+                      </div>
+                      <div className="absolute top-2.5 right-2.5 px-2 py-1 rounded-lg bg-black/70 backdrop-blur-sm text-[10px] font-mono text-slate-200">
+                        {cctvTime.cam}
+                      </div>
+                    </div>
+                    <div className="p-3.5 flex items-center justify-between gap-2 bg-slate-900/95">
+                      <div className="min-w-0">
+                        <h4 className="font-bold text-white text-xs sm:text-sm truncate">
+                          {cam.nama}
+                        </h4>
+                        <p className="text-[11px] text-slate-400 truncate">
+                          <i className="fa-solid fa-location-dot text-emerald-400 mr-1" />
+                          {cam.lokasi}
+                        </p>
+                      </div>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shrink-0">
+                        {url ? 'LIVE STREAM' : 'ONLINE'}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pt-2 border-t border-slate-800 text-[11px] text-slate-400">
+              <p>
+                <i className="fa-solid fa-shield-halved text-emerald-400 mr-1" /> Pengurus RW dapat
+                mengubah URL livestream masing-masing kamera melalui{' '}
+                <b>Dashboard Pengurus &rarr; Berita, Agenda &amp; UMKM</b>.
+              </p>
+              <button
+                type="button"
+                onClick={() => openModal('modal-kontak')}
+                className="text-emerald-400 hover:text-emerald-300 font-bold shrink-0"
+              >
+                <i className="fa-solid fa-phone-flip mr-1" /> Hubungi Pos Satpam
+              </button>
             </div>
           </div>
         </div>

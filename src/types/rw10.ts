@@ -108,6 +108,15 @@ export interface Umkm {
   wa: string;
 }
 
+export interface CctvCamera {
+  id: string;
+  nama: string;
+  lokasi: string;
+  streamUrl: string;
+  poster: string;
+  status: string;
+}
+
 export interface AdminSession {
   username: string;
   role: 'RW' | 'RT';
@@ -148,6 +157,7 @@ export type ModalId =
   | 'modal-agenda-rapat'
   | 'modal-agenda-even'
   | 'modal-kontak'
+  | 'modal-cctv'
   | 'modal-login'
   | 'modal-warga-form'
   | 'modal-confirm-delete'

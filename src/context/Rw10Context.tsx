@@ -13,6 +13,7 @@ import {
   AdminTab,
   Aduan,
   Berita,
+  CctvCamera,
   ModalId,
   PengurusRtMap,
   PengurusRw,
@@ -26,6 +27,7 @@ import {
 import {
   DEFAULT_ADUAN,
   DEFAULT_BERITA,
+  DEFAULT_CCTV,
   DEFAULT_HERO_BG,
   DEFAULT_KEUANGAN,
   DEFAULT_PENGURUS_RT,
@@ -58,6 +60,8 @@ interface Rw10ContextValue {
   setUmkm: (val: Umkm[]) => void;
   heroBg: string;
   setHeroBg: (url: string | null) => void;
+  cctv: CctvCamera[];
+  setCctv: (cams: CctvCamera[]) => void;
 
   session: AdminSession | null;
   setSession: (s: AdminSession | null) => void;
@@ -215,6 +219,7 @@ export function Rw10Provider({ children }: { children: React.ReactNode }) {
   const [berita, setBeritaState] = useState<Berita[]>(DEFAULT_BERITA);
   const [umkm, setUmkmState] = useState<Umkm[]>(DEFAULT_UMKM);
   const [heroBg, setHeroBgState] = useState<string>(DEFAULT_HERO_BG);
+  const [cctv, setCctvState] = useState<CctvCamera[]>(DEFAULT_CCTV);
 
   const wargaRef = useRef<Warga[]>(DEFAULT_WARGA);
   const suratRef = useRef<Surat[]>(DEFAULT_SURAT);
@@ -252,6 +257,7 @@ export function Rw10Provider({ children }: { children: React.ReactNode }) {
       const localKeuangan = readLocal(STORAGE_KEYS.KEUANGAN, DEFAULT_KEUANGAN);
       const localBerita = readLocal(STORAGE_KEYS.BERITA, DEFAULT_BERITA);
       const localUmkm = readLocal(STORAGE_KEYS.UMKM, DEFAULT_UMKM);
+      const localCctv = readLocal(STORAGE_KEYS.CCTV, DEFAULT_CCTV);
       const localBg =
         typeof window !== 'undefined'
           ? window.localStorage.getItem(STORAGE_KEYS.HERO_BG) || DEFAULT_HERO_BG
@@ -273,6 +279,7 @@ export function Rw10Provider({ children }: { children: React.ReactNode }) {
         setBeritaState(localBerita);
         umkmRef.current = localUmkm;
         setUmkmState(localUmkm);
+        setCctvState(localCctv);
         setHeroBgState(localBg);
         setHydrated(true);
         return;
@@ -304,6 +311,7 @@ export function Rw10Provider({ children }: { children: React.ReactNode }) {
         const rwRow = settingsRows.find((r) => r.key === 'pengurus_rw');
         const rtRow = settingsRows.find((r) => r.key === 'pengurus_rt');
         const bgRow = settingsRows.find((r) => r.key === 'hero_bg');
+        const cctvRow = settingsRows.find((r) => r.key === 'cctv');
 
         if (rwRow?.value) {
           setPengurusRwState(rwRow.value as PengurusRw);
@@ -323,6 +331,13 @@ export function Rw10Provider({ children }: { children: React.ReactNode }) {
           setHeroBgState(bgRow.value);
         } else {
           setHeroBgState(DEFAULT_HERO_BG);
+        }
+
+        if (Array.isArray(cctvRow?.value) && cctvRow.value.length > 0) {
+          setCctvState(cctvRow.value as CctvCamera[]);
+        } else {
+          await supabase.from('rw10_settings').upsert({ key: 'cctv', value: DEFAULT_CCTV });
+          setCctvState(DEFAULT_CCTV);
         }
 
         // Warga
@@ -556,6 +571,14 @@ export function Rw10Provider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const setCctv = useCallback((cams: CctvCamera[]) => {
+    setCctvState(cams);
+    writeLocal(STORAGE_KEYS.CCTV, cams);
+    if (supabase) {
+      void supabase.from('rw10_settings').upsert({ key: 'cctv', value: cams });
+    }
+  }, []);
+
   const openModal = useCallback((id: ModalId) => {
     setActiveModal(id);
   }, []);
@@ -673,6 +696,8 @@ export function Rw10Provider({ children }: { children: React.ReactNode }) {
         setUmkm,
         heroBg,
         setHeroBg,
+        cctv,
+        setCctv,
         session,
         setSession,
         viewMode,

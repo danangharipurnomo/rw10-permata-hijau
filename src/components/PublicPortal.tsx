@@ -451,6 +451,19 @@ export default function PublicPortal() {
                 </div>
               </div>
 
+              {/* Menu CCTV RW 10 */}
+              <button
+                type="button"
+                onClick={() => openModal('modal-cctv')}
+                className="px-3.5 py-2 rounded-xl text-sm font-semibold text-slate-700 hover:text-emerald-700 hover:bg-emerald-50/80 transition flex items-center gap-1.5"
+              >
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500" />
+                </span>
+                CCTV RW 10
+              </button>
+
               <button
                 type="button"
                 onClick={() => openModal('modal-login')}
@@ -462,6 +475,19 @@ export default function PublicPortal() {
 
             {/* Mobile Hamburger Button & Quick Login */}
             <div className="flex lg:hidden items-center gap-2">
+              {/* Menu CCTV RW 10 */}
+              <button
+                type="button"
+                onClick={() => openModal('modal-cctv')}
+                className="px-3.5 py-2 rounded-xl text-sm font-semibold text-slate-700 hover:text-emerald-700 hover:bg-emerald-50/80 transition flex items-center gap-1.5"
+              >
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500" />
+                </span>
+                CCTV RW 10
+              </button>
+
               <button
                 type="button"
                 onClick={() => openModal('modal-login')}
@@ -724,6 +750,24 @@ export default function PublicPortal() {
                     </button>
                   </div>
                 )}
+              </div>
+
+              <div className="border-t border-slate-100 pt-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    openModal('modal-cctv');
+                  }}
+                  className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-800 hover:bg-emerald-50"
+                >
+                  <span className="flex items-center gap-2">
+                    <i className="fa-solid fa-video text-rose-500" /> CCTV RW 10
+                  </span>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700">
+                    4 LIVE
+                  </span>
+                </button>
               </div>
 
               <div className="pt-2">

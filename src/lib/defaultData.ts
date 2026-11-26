@@ -1,6 +1,7 @@
 import {
   Aduan,
   Berita,
+  CctvCamera,
   PengurusRtMap,
   PengurusRw,
   RtKey,
@@ -20,6 +21,7 @@ export const STORAGE_KEYS = {
   BERITA: 'rw10_berita',
   UMKM: 'rw10_umkm',
   HERO_BG: 'rw10_hero_bg',
+  CCTV: 'rw10_cctv',
 } as const;
 
 export const DEFAULT_HERO_BG =
@@ -218,5 +220,44 @@ export const DEFAULT_UMKM: Umkm[] = [
     pemilik: 'Bpk. Hendra (Blok C-10 / RT 03)',
     deskripsi: 'Paket trip Dieng Plateau, sewa mobil Avanza/Innova ber-AC + sopir ramah.',
     wa: '6281328007788',
+  },
+];
+
+export const DEFAULT_CCTV: CctvCamera[] = [
+  {
+    id: 'CAM-01',
+    nama: 'Gerbang Utama & Pos Satpam',
+    lokasi: 'Akses Masuk Utama RW 10',
+    streamUrl: '',
+    poster:
+      'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=900&q=80',
+    status: 'Online',
+  },
+  {
+    id: 'CAM-02',
+    nama: 'Persimpangan Blok A & B',
+    lokasi: 'Wilayah RT 01 & RT 02',
+    streamUrl: '',
+    poster:
+      'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=900&q=80',
+    status: 'Online',
+  },
+  {
+    id: 'CAM-03',
+    nama: 'Area Gedung Serba Guna (GSG)',
+    lokasi: 'Halaman GSG & Bank Sampah',
+    streamUrl: '',
+    poster:
+      'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=900&q=80',
+    status: 'Online',
+  },
+  {
+    id: 'CAM-04',
+    nama: 'Pertigaan Blok C, D & E',
+    lokasi: 'Wilayah RT 03, RT 04 & RT 05',
+    streamUrl: '',
+    poster:
+      'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=900&q=80',
+    status: 'Online',
   },
 ];

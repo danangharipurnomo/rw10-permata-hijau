@@ -36,6 +36,9 @@ export default function AdminDashboard() {
     setUmkm,
     heroBg,
     setHeroBg,
+    cctv,
+    setCctv,
+    openModal,
     openWargaFormModal,
     openDeleteWargaModal,
     openPrintLetterModal,
@@ -82,6 +85,7 @@ export default function AdminDashboard() {
   const [umkmPemilik, setUmkmPemilik] = useState('');
   const [umkmWa, setUmkmWa] = useState('');
   const [umkmDeskripsi, setUmkmDeskripsi] = useState('');
+  const [cctvForm, setCctvForm] = useState(cctv);
 
   const isRt = session?.role === 'RT';
   const scopeRt = isRt ? session?.rtScope : null;
@@ -1812,6 +1816,104 @@ export default function AdminDashboard() {
                   </div>
                 </div>
               </div>
+            </div>
+
+            {/* CCTV RW 10 Stream Manager */}
+            <div className="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-6 space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                <div>
+                  <h3 className="font-bold text-slate-900">
+                    <i className="fa-solid fa-video text-rose-600 mr-2" />
+                    Pengaturan Livestream CCTV RW 10 ({cctvForm.length} Kamera)
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Tempel URL Embed (YouTube Live / WebRTC / IP Cam) untuk setiap kamera. Kosongkan
+                    untuk mode pratinjau simulasi.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => openModal('modal-cctv')}
+                  className="px-3.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition self-start sm:self-auto"
+                >
+                  <i className="fa-solid fa-eye mr-1" /> Pratinjau CCTV
+                </button>
+              </div>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const cleaned = cctvForm.map((cam) => ({
+                    ...cam,
+                    nama: cam.nama.trim(),
+                    lokasi: cam.lokasi.trim(),
+                    streamUrl: cam.streamUrl.trim(),
+                  }));
+                  setCctv(cleaned);
+                  showToast('Konfigurasi 4 kamera CCTV RW 10 berhasil disimpan!', 'success');
+                }}
+                className="space-y-4"
+              >
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {cctvForm.map((cam, idx) => (
+                    <div
+                      key={cam.id}
+                      className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-black text-emerald-800 font-mono">
+                          {cam.id}
+                        </span>
+                        <span className="text-[10px] font-bold text-slate-400">
+                          Kamera #{idx + 1}
+                        </span>
+                      </div>
+                      <input
+                        type="text"
+                        required
+                        value={cam.nama}
+                        onChange={(e) => {
+                          const next = [...cctvForm];
+                          next[idx] = { ...next[idx], nama: e.target.value };
+                          setCctvForm(next);
+                        }}
+                        placeholder="Nama Kamera"
+                        className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs font-semibold outline-none focus:ring-2 focus:ring-emerald-500"
+                      />
+                      <input
+                        type="text"
+                        required
+                        value={cam.lokasi}
+                        onChange={(e) => {
+                          const next = [...cctvForm];
+                          next[idx] = { ...next[idx], lokasi: e.target.value };
+                          setCctvForm(next);
+                        }}
+                        placeholder="Lokasi Titik Kamera"
+                        className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs outline-none focus:ring-2 focus:ring-emerald-500"
+                      />
+                      <input
+                        type="url"
+                        value={cam.streamUrl}
+                        onChange={(e) => {
+                          const next = [...cctvForm];
+                          next[idx] = { ...next[idx], streamUrl: e.target.value };
+                          setCctvForm(next);
+                        }}
+                        placeholder="URL Embed Livestream (YouTube Live / IP Cam)"
+                        className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs font-mono outline-none focus:ring-2 focus:ring-emerald-500"
+                      />
+                    </div>
+                  ))}
+                </div>
+                <div className="flex justify-end">
+                  <button
+                    type="submit"
+                    className="px-5 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold transition shadow flex items-center gap-1.5"
+                  >
+                    <i className="fa-solid fa-floppy-disk" /> Simpan Konfigurasi CCTV
+                  </button>
+                </div>
+              </form>
             </div>
 
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
