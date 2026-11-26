@@ -13,6 +13,7 @@ import {
 
 export default function PublicPortal() {
   const {
+    hydrated,
     warga,
     keuangan,
     berita,
@@ -870,9 +871,13 @@ export default function PublicPortal() {
                 <div className="flex items-center justify-between border-b border-white/15 pb-4">
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
+                      <span
+                        className={`w-2.5 h-2.5 rounded-full ${
+                          hydrated ? 'bg-emerald-400' : 'bg-amber-400 animate-pulse'
+                        }`}
+                      />
                       <p className="text-xs text-emerald-200 font-bold uppercase tracking-wider">
-                        Statistik Demografi Aktif
+                        {hydrated ? 'Statistik Demografi Aktif' : 'Menyinkronkan Data...'}
                       </p>
                     </div>
                     <h3 className="font-black text-xl text-white mt-0.5">RW 10 Permata Hijau</h3>

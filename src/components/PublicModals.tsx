@@ -146,7 +146,8 @@ export default function PublicModals() {
   const handleSubmitServiceForm = (e: React.FormEvent) => {
     e.preventDefault();
     const nextNum = String(surat.length + 1).padStart(3, '0');
-    const kode = `RW10-2026-${nextNum}`;
+    const uniqueSuffix = Math.random().toString(36).slice(2, 5).toUpperCase();
+    const kode = `RW10-2026-${nextNum}-${uniqueSuffix}`;
     const today = new Date().toISOString().split('T')[0];
 
     const newItem = {
@@ -182,8 +183,9 @@ export default function PublicModals() {
 
   const handleSubmitPengaduan = (e: React.FormEvent) => {
     e.preventDefault();
+    const uniqueSuffix = Math.random().toString(36).slice(2, 4).toUpperCase();
     const newAduan = {
-      id: 'ADU-' + String(aduan.length + 1).padStart(3, '0'),
+      id: `ADU-${Date.now().toString().slice(-5)}-${uniqueSuffix}`,
       tanggal: new Date().toISOString().split('T')[0],
       nama: aduNama.trim(),
       kategori: aduKategori,
@@ -727,11 +729,24 @@ export default function PublicModals() {
                 />
               </div>
             </div>
-            <p className="text-[11px] text-slate-400 -mt-2">
-              <i className="fa-solid fa-lock text-emerald-600 mr-1" />
-              <b>Zero-NIK:</b> Portal tidak meminta/menyimpan NIK. Masukkan ID Warga + 4 digit
-              tgl/bln lahir untuk isi otomatis aman.
-            </p>
+            <div className="flex flex-wrap items-center justify-between gap-2 -mt-2">
+              <p className="text-[11px] text-slate-400">
+                <i className="fa-solid fa-lock text-emerald-600 mr-1" />
+                <b>Zero-NIK:</b> Masukkan ID Warga + 4 digit tgl/bln lahir untuk isi otomatis.
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setSrvIdWarga('WARGA-BARU');
+                  setSrvPin('');
+                  setSrvIdMatched(false);
+                  showToast('Mode warga baru dipilih. Lanjutkan mengisi data diri Anda.', 'info');
+                }}
+                className="text-[11px] font-bold text-emerald-700 hover:text-emerald-800 underline shrink-0"
+              >
+                Belum punya ID Warga?
+              </button>
+            </div>
 
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">

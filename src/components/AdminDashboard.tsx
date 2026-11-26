@@ -79,12 +79,14 @@ export default function AdminDashboard() {
   const [beritaFotoUrl, setBeritaFotoUrl] = useState('');
   const [beritaCaption, setBeritaCaption] = useState('');
   const [beritaIsi, setBeritaIsi] = useState('');
+  const [editingBeritaId, setEditingBeritaId] = useState<string | null>(null);
 
   const [umkmNama, setUmkmNama] = useState('');
   const [umkmKategori, setUmkmKategori] = useState('Kuliner');
   const [umkmPemilik, setUmkmPemilik] = useState('');
   const [umkmWa, setUmkmWa] = useState('');
   const [umkmDeskripsi, setUmkmDeskripsi] = useState('');
+  const [editingUmkmId, setEditingUmkmId] = useState<string | null>(null);
   const [cctvForm, setCctvForm] = useState(cctv);
 
   const isRt = session?.role === 'RT';
@@ -344,9 +346,10 @@ export default function AdminDashboard() {
 
   const handleAddBerita = (e: React.FormEvent) => {
     e.preventDefault();
-    const newBerita = {
-      id: 'BRT-' + Date.now(),
-      tanggal: new Date().toISOString().split('T')[0],
+    const existing = editingBeritaId ? berita.find((b) => b.id === editingBeritaId) : null;
+    const payload = {
+      id: editingBeritaId || 'BRT-' + Date.now(),
+      tanggal: existing?.tanggal || new Date().toISOString().split('T')[0],
       kategori: beritaKategori,
       penulis: beritaPenulis.trim() || 'Pengurus RW 10',
       foto: beritaFotoData || beritaFotoUrl.trim() || DEFAULT_BERITA_IMG,
@@ -354,37 +357,48 @@ export default function AdminDashboard() {
       judul: beritaJudul.trim(),
       isi: beritaIsi.trim(),
     };
-    const ok = setBerita([newBerita, ...berita]);
+    const nextList = editingBeritaId
+      ? berita.map((b) => (b.id === editingBeritaId ? payload : b))
+      : [payload, ...berita];
+    const ok = setBerita(nextList);
     if (!ok) {
       showToast('Penyimpanan browser penuh. Hapus berita lama atau gunakan URL foto.', 'error');
       return;
     }
+    setEditingBeritaId(null);
     setBeritaJudul('');
     setBeritaFotoData('');
     setBeritaFotoUrl('');
     setBeritaCaption('');
     setBeritaIsi('');
-    showToast('Berita kegiatan berhasil dipublikasikan!', 'success');
+    showToast(
+      editingBeritaId ? 'Berita berhasil diperbarui!' : 'Berita kegiatan berhasil dipublikasikan!',
+      'success'
+    );
   };
 
   const handleAddUmkm = (e: React.FormEvent) => {
     e.preventDefault();
-    setUmkm([
-      {
-        id: 'UMKM-' + Date.now(),
-        nama: umkmNama.trim(),
-        kategori: umkmKategori,
-        pemilik: umkmPemilik.trim(),
-        wa: sanitizeWa(umkmWa),
-        deskripsi: umkmDeskripsi.trim(),
-      },
-      ...umkm,
-    ]);
+    const payload = {
+      id: editingUmkmId || 'UMKM-' + Date.now(),
+      nama: umkmNama.trim(),
+      kategori: umkmKategori,
+      pemilik: umkmPemilik.trim(),
+      wa: sanitizeWa(umkmWa),
+      deskripsi: umkmDeskripsi.trim(),
+    };
+    if (editingUmkmId) {
+      setUmkm(umkm.map((u) => (u.id === editingUmkmId ? payload : u)));
+      showToast('Data UMKM berhasil diperbarui.', 'success');
+    } else {
+      setUmkm([payload, ...umkm]);
+      showToast('UMKM berhasil ditambahkan ke direktori.', 'success');
+    }
+    setEditingUmkmId(null);
     setUmkmNama('');
     setUmkmPemilik('');
     setUmkmWa('');
     setUmkmDeskripsi('');
-    showToast('UMKM berhasil ditambahkan ke direktori.', 'success');
   };
 
   const navBtnClass = (tab: AdminTab) =>
@@ -2010,12 +2024,31 @@ export default function AdminDashboard() {
                     placeholder="Tulis isi berita lengkap (gunakan Enter untuk membuat paragraf baru)..."
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm outline-none focus:ring-2 focus:ring-emerald-500"
                   />
-                  <button
-                    type="submit"
-                    className="w-full py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs sm:text-sm font-bold transition shadow flex items-center justify-center gap-2"
-                  >
-                    <i className="fa-solid fa-paper-plane" /> Publikasikan Berita
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      type="submit"
+                      className="flex-1 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs sm:text-sm font-bold transition shadow flex items-center justify-center gap-2"
+                    >
+                      <i className="fa-solid fa-paper-plane" />{' '}
+                      {editingBeritaId ? 'Simpan Perubahan Berita' : 'Publikasikan Berita'}
+                    </button>
+                    {editingBeritaId && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditingBeritaId(null);
+                          setBeritaJudul('');
+                          setBeritaFotoData('');
+                          setBeritaFotoUrl('');
+                          setBeritaCaption('');
+                          setBeritaIsi('');
+                        }}
+                        className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition"
+                      >
+                        Batal
+                      </button>
+                    )}
+                  </div>
                 </form>
 
                 <div className="divide-y divide-slate-100 max-h-64 overflow-y-auto text-sm">
@@ -2038,16 +2071,42 @@ export default function AdminDashboard() {
                             {b.kategori || 'Pengumuman'} • {b.tanggal}
                           </p>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setBerita(berita.filter((item) => item.id !== b.id));
-                            showToast('Berita dihapus.', 'info');
-                          }}
-                          className="text-rose-500 hover:text-rose-700 text-xs p-1 shrink-0"
-                        >
-                          <i className="fa-solid fa-trash-can" />
-                        </button>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingBeritaId(b.id);
+                              setBeritaJudul(b.judul);
+                              setBeritaKategori(b.kategori || 'Pengumuman');
+                              setBeritaPenulis(b.penulis || 'Pengurus RW 10');
+                              if (b.foto && b.foto.startsWith('data:')) {
+                                setBeritaFotoData(b.foto);
+                                setBeritaFotoUrl('');
+                              } else {
+                                setBeritaFotoData('');
+                                setBeritaFotoUrl(b.foto || '');
+                              }
+                              setBeritaCaption(b.caption || '');
+                              setBeritaIsi(b.isi);
+                            }}
+                            className="text-emerald-600 hover:text-emerald-800 text-xs p-1"
+                            title="Edit Berita"
+                          >
+                            <i className="fa-solid fa-pen-to-square" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setBerita(berita.filter((item) => item.id !== b.id));
+                              if (editingBeritaId === b.id) setEditingBeritaId(null);
+                              showToast('Berita dihapus.', 'info');
+                            }}
+                            className="text-rose-500 hover:text-rose-700 text-xs p-1"
+                            title="Hapus Berita"
+                          >
+                            <i className="fa-solid fa-trash-can" />
+                          </button>
+                        </div>
                       </div>
                     ))
                   )}
@@ -2108,12 +2167,29 @@ export default function AdminDashboard() {
                     placeholder="Deskripsi produk / layanan"
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm outline-none focus:ring-2 focus:ring-indigo-500"
                   />
-                  <button
-                    type="submit"
-                    className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition shadow"
-                  >
-                    Simpan UMKM
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      type="submit"
+                      className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition shadow"
+                    >
+                      {editingUmkmId ? 'Simpan Perubahan UMKM' : 'Simpan UMKM'}
+                    </button>
+                    {editingUmkmId && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditingUmkmId(null);
+                          setUmkmNama('');
+                          setUmkmPemilik('');
+                          setUmkmWa('');
+                          setUmkmDeskripsi('');
+                        }}
+                        className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition"
+                      >
+                        Batal
+                      </button>
+                    )}
+                  </div>
                 </form>
 
                 <div className="divide-y divide-slate-100 max-h-64 overflow-y-auto text-sm">
@@ -2133,16 +2209,35 @@ export default function AdminDashboard() {
                             {u.pemilik} • WA: {u.wa}
                           </p>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setUmkm(umkm.filter((item) => item.id !== u.id));
-                            showToast('UMKM dihapus.', 'info');
-                          }}
-                          className="text-rose-500 hover:text-rose-700 text-xs p-1 shrink-0"
-                        >
-                          <i className="fa-solid fa-trash-can" />
-                        </button>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingUmkmId(u.id);
+                              setUmkmNama(u.nama);
+                              setUmkmKategori(u.kategori);
+                              setUmkmPemilik(u.pemilik);
+                              setUmkmWa(u.wa);
+                              setUmkmDeskripsi(u.deskripsi);
+                            }}
+                            className="text-indigo-600 hover:text-indigo-800 text-xs p-1"
+                            title="Edit UMKM"
+                          >
+                            <i className="fa-solid fa-pen-to-square" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setUmkm(umkm.filter((item) => item.id !== u.id));
+                              if (editingUmkmId === u.id) setEditingUmkmId(null);
+                              showToast('UMKM dihapus.', 'info');
+                            }}
+                            className="text-rose-500 hover:text-rose-700 text-xs p-1"
+                            title="Hapus UMKM"
+                          >
+                            <i className="fa-solid fa-trash-can" />
+                          </button>
+                        </div>
                       </div>
                     ))
                   )}

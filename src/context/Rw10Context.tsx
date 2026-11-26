@@ -194,16 +194,26 @@ async function syncCollection<T>(
   prevItems: T[],
   nextItems: T[],
   toDb: (item: T) => Record<string, unknown>,
-  getId: (item: T) => string
+  getId: (item: T) => string,
+  onError?: (msg: string) => void
 ) {
   if (!supabase) return;
-  const nextIds = new Set(nextItems.map(getId));
-  const removedIds = prevItems.map(getId).filter((id) => !nextIds.has(id));
-  if (removedIds.length > 0) {
-    await supabase.from(table).delete().in(pk, removedIds);
-  }
-  if (nextItems.length > 0) {
-    await supabase.from(table).upsert(nextItems.map(toDb), { onConflict: pk });
+  try {
+    const nextIds = new Set(nextItems.map(getId));
+    const removedIds = prevItems.map(getId).filter((id) => !nextIds.has(id));
+    if (removedIds.length > 0) {
+      const { error } = await supabase.from(table).delete().in(pk, removedIds);
+      if (error) throw error;
+    }
+    if (nextItems.length > 0) {
+      const { error } = await supabase
+        .from(table)
+        .upsert(nextItems.map(toDb), { onConflict: pk });
+      if (error) throw error;
+    }
+  } catch (err) {
+    console.error(`Supabase sync error (${table}):`, err);
+    onError?.('Gagal menyimpan ke server database. Periksa koneksi internet Anda.');
   }
 }
 
@@ -228,9 +238,29 @@ export function Rw10Provider({ children }: { children: React.ReactNode }) {
   const beritaRef = useRef<Berita[]>(DEFAULT_BERITA);
   const umkmRef = useRef<Umkm[]>(DEFAULT_UMKM);
 
-  const [session, setSession] = useState<AdminSession | null>(null);
-  const [viewMode, setViewMode] = useState<'public' | 'admin'>('public');
+  const [session, setSessionState] = useState<AdminSession | null>(null);
+  const [viewMode, setViewModeState] = useState<'public' | 'admin'>('public');
   const [adminTab, setAdminTabState] = useState<AdminTab>('dashboard');
+
+  const setSession = useCallback((s: AdminSession | null) => {
+    setSessionState(s);
+    if (typeof window !== 'undefined') {
+      if (s) {
+        window.sessionStorage.setItem('rw10_admin_session', JSON.stringify(s));
+      } else {
+        window.sessionStorage.removeItem('rw10_admin_session');
+        window.sessionStorage.removeItem('rw10_admin_view');
+        window.sessionStorage.removeItem('rw10_admin_tab');
+      }
+    }
+  }, []);
+
+  const setViewMode = useCallback((m: 'public' | 'admin') => {
+    setViewModeState(m);
+    if (typeof window !== 'undefined') {
+      window.sessionStorage.setItem('rw10_admin_view', m);
+    }
+  }, []);
 
   const [activeModal, setActiveModal] = useState<ModalId | null>(null);
   const [serviceJenis, setServiceJenis] = useState<string>('Surat Pengantar');
@@ -248,6 +278,22 @@ export function Rw10Provider({ children }: { children: React.ReactNode }) {
     let active = true;
 
     async function hydrateData() {
+      // Restore admin session across page refreshes
+      if (typeof window !== 'undefined') {
+        try {
+          const savedSession = window.sessionStorage.getItem('rw10_admin_session');
+          const savedView = window.sessionStorage.getItem('rw10_admin_view');
+          const savedTab = window.sessionStorage.getItem('rw10_admin_tab');
+          if (savedSession) {
+            setSessionState(JSON.parse(savedSession) as AdminSession);
+            if (savedView === 'admin') setViewModeState('admin');
+            if (savedTab) setAdminTabState(savedTab as AdminTab);
+          }
+        } catch {
+          // ignore invalid sessionStorage
+        }
+      }
+
       // Load localStorage fallback immediately
       const localRw = readLocal(STORAGE_KEYS.PENGURUS_RW, DEFAULT_PENGURUS_RW);
       const localRt = readLocal(STORAGE_KEYS.PENGURUS_RT, DEFAULT_PENGURUS_RT);
@@ -435,149 +481,207 @@ export function Rw10Provider({ children }: { children: React.ReactNode }) {
     }, 3400);
   }, []);
 
-  const setPengurusRw = useCallback((val: PengurusRw) => {
-    setPengurusRwState(val);
-    writeLocal(STORAGE_KEYS.PENGURUS_RW, val);
-    if (supabase) {
-      void supabase.from('rw10_settings').upsert({ key: 'pengurus_rw', value: val });
-    }
-  }, []);
+  const setPengurusRw = useCallback(
+    (val: PengurusRw) => {
+      setPengurusRwState(val);
+      writeLocal(STORAGE_KEYS.PENGURUS_RW, val);
+      if (supabase) {
+        void supabase
+          .from('rw10_settings')
+          .upsert({ key: 'pengurus_rw', value: val })
+          .then(({ error }) => {
+            if (error) showToast('Gagal menyimpan Pengurus RW ke server.', 'error');
+          });
+      }
+    },
+    [showToast]
+  );
 
-  const setPengurusRt = useCallback((val: PengurusRtMap) => {
-    setPengurusRtState(val);
-    writeLocal(STORAGE_KEYS.PENGURUS_RT, val);
-    if (supabase) {
-      void supabase.from('rw10_settings').upsert({ key: 'pengurus_rt', value: val });
-    }
-  }, []);
+  const setPengurusRt = useCallback(
+    (val: PengurusRtMap) => {
+      setPengurusRtState(val);
+      writeLocal(STORAGE_KEYS.PENGURUS_RT, val);
+      if (supabase) {
+        void supabase
+          .from('rw10_settings')
+          .upsert({ key: 'pengurus_rt', value: val })
+          .then(({ error }) => {
+            if (error) showToast('Gagal menyimpan Pengurus RT ke server.', 'error');
+          });
+      }
+    },
+    [showToast]
+  );
 
-  const setWarga = useCallback((val: Warga[]) => {
-    const prev = wargaRef.current;
-    wargaRef.current = val;
-    setWargaState(val);
-    writeLocal(STORAGE_KEYS.WARGA, val);
-    void syncCollection('rw10_warga', 'id', prev, val, mapWargaToDb, (w) => w.id);
-  }, []);
+  const setWarga = useCallback(
+    (val: Warga[]) => {
+      const prev = wargaRef.current;
+      wargaRef.current = val;
+      setWargaState(val);
+      writeLocal(STORAGE_KEYS.WARGA, val);
+      void syncCollection('rw10_warga', 'id', prev, val, mapWargaToDb, (w) => w.id, (m) =>
+        showToast(m, 'error')
+      );
+    },
+    [showToast]
+  );
 
-  const setSurat = useCallback((val: Surat[]) => {
-    const prev = suratRef.current;
-    suratRef.current = val;
-    setSuratState(val);
-    writeLocal(STORAGE_KEYS.SURAT, val);
-    void syncCollection('rw10_surat', 'kode', prev, val, mapSuratToDb, (s) => s.kode);
-  }, []);
+  const setSurat = useCallback(
+    (val: Surat[]) => {
+      const prev = suratRef.current;
+      suratRef.current = val;
+      setSuratState(val);
+      writeLocal(STORAGE_KEYS.SURAT, val);
+      void syncCollection('rw10_surat', 'kode', prev, val, mapSuratToDb, (s) => s.kode, (m) =>
+        showToast(m, 'error')
+      );
+    },
+    [showToast]
+  );
 
-  const setAduan = useCallback((val: Aduan[]) => {
-    const prev = aduanRef.current;
-    aduanRef.current = val;
-    setAduanState(val);
-    writeLocal(STORAGE_KEYS.ADUAN, val);
-    void syncCollection(
-      'rw10_aduan',
-      'id',
-      prev,
-      val,
-      (a) => ({
-        id: a.id,
-        tanggal: a.tanggal,
-        nama: a.nama,
-        kategori: a.kategori,
-        deskripsi: a.deskripsi,
-        wa: a.wa || '',
-        status: a.status,
-        tanggapan: a.tanggapan || '',
-      }),
-      (a) => a.id
-    );
-  }, []);
+  const setAduan = useCallback(
+    (val: Aduan[]) => {
+      const prev = aduanRef.current;
+      aduanRef.current = val;
+      setAduanState(val);
+      writeLocal(STORAGE_KEYS.ADUAN, val);
+      void syncCollection(
+        'rw10_aduan',
+        'id',
+        prev,
+        val,
+        (a) => ({
+          id: a.id,
+          tanggal: a.tanggal,
+          nama: a.nama,
+          kategori: a.kategori,
+          deskripsi: a.deskripsi,
+          wa: a.wa || '',
+          status: a.status,
+          tanggapan: a.tanggapan || '',
+        }),
+        (a) => a.id,
+        (m) => showToast(m, 'error')
+      );
+    },
+    [showToast]
+  );
 
-  const setKeuangan = useCallback((val: TransaksiKas[]) => {
-    const prev = keuanganRef.current;
-    keuanganRef.current = val;
-    setKeuanganState(val);
-    writeLocal(STORAGE_KEYS.KEUANGAN, val);
-    void syncCollection(
-      'rw10_keuangan',
-      'id',
-      prev,
-      val,
-      (t) => ({
-        id: t.id,
-        tanggal: t.tanggal,
-        keterangan: t.keterangan,
-        tipe: t.tipe,
-        nominal: Number(t.nominal),
-      }),
-      (t) => t.id
-    );
-  }, []);
+  const setKeuangan = useCallback(
+    (val: TransaksiKas[]) => {
+      const prev = keuanganRef.current;
+      keuanganRef.current = val;
+      setKeuanganState(val);
+      writeLocal(STORAGE_KEYS.KEUANGAN, val);
+      void syncCollection(
+        'rw10_keuangan',
+        'id',
+        prev,
+        val,
+        (t) => ({
+          id: t.id,
+          tanggal: t.tanggal,
+          keterangan: t.keterangan,
+          tipe: t.tipe,
+          nominal: Number(t.nominal),
+        }),
+        (t) => t.id,
+        (m) => showToast(m, 'error')
+      );
+    },
+    [showToast]
+  );
 
-  const setBerita = useCallback((val: Berita[]): boolean => {
-    const prev = beritaRef.current;
-    beritaRef.current = val;
-    setBeritaState(val);
-    writeLocal(STORAGE_KEYS.BERITA, val);
-    void syncCollection(
-      'rw10_berita',
-      'id',
-      prev,
-      val,
-      (b) => ({
-        id: b.id,
-        tanggal: b.tanggal,
-        kategori: b.kategori,
-        penulis: b.penulis,
-        foto: b.foto || '',
-        caption: b.caption || '',
-        judul: b.judul,
-        isi: b.isi,
-      }),
-      (b) => b.id
-    );
-    return true;
-  }, []);
+  const setBerita = useCallback(
+    (val: Berita[]): boolean => {
+      const prev = beritaRef.current;
+      beritaRef.current = val;
+      setBeritaState(val);
+      writeLocal(STORAGE_KEYS.BERITA, val);
+      void syncCollection(
+        'rw10_berita',
+        'id',
+        prev,
+        val,
+        (b) => ({
+          id: b.id,
+          tanggal: b.tanggal,
+          kategori: b.kategori,
+          penulis: b.penulis,
+          foto: b.foto || '',
+          caption: b.caption || '',
+          judul: b.judul,
+          isi: b.isi,
+        }),
+        (b) => b.id,
+        (m) => showToast(m, 'error')
+      );
+      return true;
+    },
+    [showToast]
+  );
 
-  const setUmkm = useCallback((val: Umkm[]) => {
-    const prev = umkmRef.current;
-    umkmRef.current = val;
-    setUmkmState(val);
-    writeLocal(STORAGE_KEYS.UMKM, val);
-    void syncCollection(
-      'rw10_umkm',
-      'id',
-      prev,
-      val,
-      (u) => ({
-        id: u.id,
-        nama: u.nama,
-        kategori: u.kategori,
-        pemilik: u.pemilik,
-        deskripsi: u.deskripsi,
-        wa: u.wa,
-      }),
-      (u) => u.id
-    );
-  }, []);
+  const setUmkm = useCallback(
+    (val: Umkm[]) => {
+      const prev = umkmRef.current;
+      umkmRef.current = val;
+      setUmkmState(val);
+      writeLocal(STORAGE_KEYS.UMKM, val);
+      void syncCollection(
+        'rw10_umkm',
+        'id',
+        prev,
+        val,
+        (u) => ({
+          id: u.id,
+          nama: u.nama,
+          kategori: u.kategori,
+          pemilik: u.pemilik,
+          deskripsi: u.deskripsi,
+          wa: u.wa,
+        }),
+        (u) => u.id,
+        (m) => showToast(m, 'error')
+      );
+    },
+    [showToast]
+  );
 
-  const setHeroBg = useCallback((url: string | null) => {
-    const nextUrl = url || DEFAULT_HERO_BG;
-    setHeroBgState(nextUrl);
-    if (typeof window !== 'undefined') {
-      if (!url) window.localStorage.removeItem(STORAGE_KEYS.HERO_BG);
-      else window.localStorage.setItem(STORAGE_KEYS.HERO_BG, url);
-    }
-    if (supabase) {
-      void supabase.from('rw10_settings').upsert({ key: 'hero_bg', value: nextUrl });
-    }
-  }, []);
+  const setHeroBg = useCallback(
+    (url: string | null) => {
+      const nextUrl = url || DEFAULT_HERO_BG;
+      setHeroBgState(nextUrl);
+      if (typeof window !== 'undefined') {
+        if (!url) window.localStorage.removeItem(STORAGE_KEYS.HERO_BG);
+        else window.localStorage.setItem(STORAGE_KEYS.HERO_BG, url);
+      }
+      if (supabase) {
+        void supabase
+          .from('rw10_settings')
+          .upsert({ key: 'hero_bg', value: nextUrl })
+          .then(({ error }) => {
+            if (error) showToast('Gagal menyimpan background ke server.', 'error');
+          });
+      }
+    },
+    [showToast]
+  );
 
-  const setCctv = useCallback((cams: CctvCamera[]) => {
-    setCctvState(cams);
-    writeLocal(STORAGE_KEYS.CCTV, cams);
-    if (supabase) {
-      void supabase.from('rw10_settings').upsert({ key: 'cctv', value: cams });
-    }
-  }, []);
+  const setCctv = useCallback(
+    (cams: CctvCamera[]) => {
+      setCctvState(cams);
+      writeLocal(STORAGE_KEYS.CCTV, cams);
+      if (supabase) {
+        void supabase
+          .from('rw10_settings')
+          .upsert({ key: 'cctv', value: cams })
+          .then(({ error }) => {
+            if (error) showToast('Gagal menyimpan konfigurasi CCTV ke server.', 'error');
+          });
+      }
+    },
+    [showToast]
+  );
 
   const openModal = useCallback((id: ModalId) => {
     setActiveModal(id);
@@ -610,6 +714,9 @@ export function Rw10Provider({ children }: { children: React.ReactNode }) {
         return;
       }
       setAdminTabState(tabName);
+      if (typeof window !== 'undefined') {
+        window.sessionStorage.setItem('rw10_admin_tab', tabName);
+      }
     },
     [session, showToast]
   );
