@@ -265,7 +265,7 @@ export const DEFAULT_CCTV: CctvCamera[] = [
 ];
 
 export const DEFAULT_AUTH_CONFIG: AuthConfig = {
-  showDemoButtons: true,
+  showDemoButtons: false,
   accounts: [
     {
       id: 'RW',

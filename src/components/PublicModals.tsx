@@ -2195,35 +2195,6 @@ export default function PublicModals() {
             }}
             className="p-6 space-y-4"
           >
-            {authConfig.showDemoButtons && (
-              <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
-                <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                  Pilih Akun Demo (Klik untuk Isi Cepat):
-                </p>
-                <div className="flex flex-wrap gap-1.5">
-                  {authConfig.accounts.slice(0, 4).map((acc) => (
-                    <button
-                      key={acc.id}
-                      type="button"
-                      onClick={() => attemptLogin(acc.username, acc.password)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 shadow-sm ${
-                        acc.role === 'RW'
-                          ? 'bg-emerald-100 text-emerald-900 hover:bg-emerald-200'
-                          : 'bg-sky-100 text-sky-900 hover:bg-sky-200'
-                      }`}
-                    >
-                      <i
-                        className={`fa-solid fa-bolt ${
-                          acc.role === 'RW' ? 'text-emerald-600' : 'text-sky-600'
-                        }`}
-                      />{' '}
-                      {acc.role === 'RW' ? 'Demo Admin RW (Masuk Langsung)' : acc.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">
                 Username Pengurus

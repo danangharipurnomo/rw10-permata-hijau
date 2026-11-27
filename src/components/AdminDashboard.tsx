@@ -2309,33 +2309,6 @@ export default function AdminDashboard() {
               }}
               className="space-y-5"
             >
-              {!isRt && (
-                <div className="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div>
-                    <h3 className="font-bold text-slate-900 text-sm">
-                      Tombol Login Demo Cepat di Portal Publik
-                    </h3>
-                    <p className="text-xs text-slate-500 mt-0.5">
-                      Matikan opsi ini jika website sudah dipakai resmi oleh warga agar tombol demo
-                      1-klik tidak tampil di form login.
-                    </p>
-                  </div>
-                  <label className="inline-flex items-center gap-2.5 cursor-pointer shrink-0">
-                    <input
-                      type="checkbox"
-                      checked={authForm.showDemoButtons}
-                      onChange={(e) =>
-                        setAuthForm({ ...authForm, showDemoButtons: e.target.checked })
-                      }
-                      className="w-5 h-5 accent-emerald-600 rounded cursor-pointer"
-                    />
-                    <span className="text-xs font-bold text-slate-700">
-                      {authForm.showDemoButtons ? 'Ditampilkan' : 'Disembunyikan'}
-                    </span>
-                  </label>
-                </div>
-              )}
-
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {authForm.accounts
                   .filter((acc) => !isRt || acc.rtScope === scopeRt)
