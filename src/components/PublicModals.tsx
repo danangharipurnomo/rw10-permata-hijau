@@ -31,6 +31,7 @@ export default function PublicModals() {
     umkm,
     setUmkm,
     cctv,
+    authConfig,
     serviceJenis,
     openServiceModal,
     regSuccessData,
@@ -222,37 +223,30 @@ export default function PublicModals() {
   };
 
   const attemptLogin = (rawUser: string, rawPass: string) => {
-    let user = rawUser.trim().toLowerCase().replace(/[\s\-_]/g, '');
-    const pass = rawPass.trim();
+    const cleanUser = rawUser.trim().toLowerCase();
+    const cleanPass = rawPass.trim();
+    const normalizedRt = /^rt[1-5]$/.test(cleanUser)
+      ? 'rt0' + cleanUser.slice(2)
+      : cleanUser;
 
-    if (/^rt[1-5]$/.test(user)) {
-      user = 'rt0' + user.slice(2);
-    }
+    const matched = authConfig.accounts.find(
+      (acc) =>
+        (acc.username.toLowerCase() === cleanUser ||
+          acc.username.toLowerCase() === normalizedRt) &&
+        acc.password === cleanPass
+    );
 
-    let nextSession = null;
-    if (
-      (user === 'admin' || user === 'rw10' || user === 'rw') &&
-      (pass === 'admin123' || pass === 'admin')
-    ) {
-      nextSession = {
-        username: 'admin',
-        role: 'RW' as const,
-        rtScope: null,
-        label: 'Pengurus RW 10',
-      };
-    } else if (/^rt0[1-5]$/.test(user) && (pass === 'rt123' || pass === 'rt' || pass === 'admin123')) {
-      const rtNum = user.slice(2);
-      const rtName = `RT ${rtNum}` as RtKey;
-      nextSession = {
-        username: user,
-        role: 'RT' as const,
-        rtScope: rtName,
-        label: `Ketua ${rtName}`,
-      };
-    } else {
-      showToast('Username atau password salah! Coba: admin / admin123', 'error');
+    if (!matched) {
+      showToast('Username atau password salah!', 'error');
       return;
     }
+
+    const nextSession = {
+      username: matched.username,
+      role: matched.role,
+      rtScope: matched.rtScope,
+      label: matched.label,
+    };
 
     setSession(nextSession);
     setLoginUser('');
@@ -2201,41 +2195,34 @@ export default function PublicModals() {
             }}
             className="p-6 space-y-4"
           >
-            <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
-              <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                Pilih Akun Demo (Klik untuk Isi Cepat):
-              </p>
-              <div className="flex flex-wrap gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => attemptLogin('admin', 'admin123')}
-                  className="px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-100 text-emerald-900 hover:bg-emerald-200 transition flex items-center gap-1 shadow-sm"
-                >
-                  <i className="fa-solid fa-bolt text-emerald-600" /> Demo Admin RW (Masuk Langsung)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => attemptLogin('rt01', 'rt123')}
-                  className="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-sky-100 text-sky-900 hover:bg-sky-200 transition flex items-center gap-1 shadow-sm"
-                >
-                  <i className="fa-solid fa-bolt text-sky-600" /> Ketua RT 01
-                </button>
-                <button
-                  type="button"
-                  onClick={() => attemptLogin('rt02', 'rt123')}
-                  className="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-sky-100 text-sky-900 hover:bg-sky-200 transition flex items-center gap-1 shadow-sm"
-                >
-                  <i className="fa-solid fa-bolt text-sky-600" /> Ketua RT 02
-                </button>
-                <button
-                  type="button"
-                  onClick={() => attemptLogin('rt03', 'rt123')}
-                  className="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-sky-100 text-sky-900 hover:bg-sky-200 transition flex items-center gap-1 shadow-sm"
-                >
-                  <i className="fa-solid fa-bolt text-sky-600" /> Ketua RT 03
-                </button>
+            {authConfig.showDemoButtons && (
+              <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+                <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                  Pilih Akun Demo (Klik untuk Isi Cepat):
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {authConfig.accounts.slice(0, 4).map((acc) => (
+                    <button
+                      key={acc.id}
+                      type="button"
+                      onClick={() => attemptLogin(acc.username, acc.password)}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 shadow-sm ${
+                        acc.role === 'RW'
+                          ? 'bg-emerald-100 text-emerald-900 hover:bg-emerald-200'
+                          : 'bg-sky-100 text-sky-900 hover:bg-sky-200'
+                      }`}
+                    >
+                      <i
+                        className={`fa-solid fa-bolt ${
+                          acc.role === 'RW' ? 'text-emerald-600' : 'text-sky-600'
+                        }`}
+                      />{' '}
+                      {acc.role === 'RW' ? 'Demo Admin RW (Masuk Langsung)' : acc.label}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">

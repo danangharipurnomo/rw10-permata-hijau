@@ -12,6 +12,7 @@ import {
   AdminSession,
   AdminTab,
   Aduan,
+  AuthConfig,
   Berita,
   CctvCamera,
   ModalId,
@@ -26,6 +27,7 @@ import {
 } from '@/types/rw10';
 import {
   DEFAULT_ADUAN,
+  DEFAULT_AUTH_CONFIG,
   DEFAULT_BERITA,
   DEFAULT_CCTV,
   DEFAULT_HERO_BG,
@@ -62,6 +64,8 @@ interface Rw10ContextValue {
   setHeroBg: (url: string | null) => void;
   cctv: CctvCamera[];
   setCctv: (cams: CctvCamera[]) => void;
+  authConfig: AuthConfig;
+  setAuthConfig: (cfg: AuthConfig) => void;
 
   session: AdminSession | null;
   setSession: (s: AdminSession | null) => void;
@@ -230,6 +234,7 @@ export function Rw10Provider({ children }: { children: React.ReactNode }) {
   const [umkm, setUmkmState] = useState<Umkm[]>(DEFAULT_UMKM);
   const [heroBg, setHeroBgState] = useState<string>(DEFAULT_HERO_BG);
   const [cctv, setCctvState] = useState<CctvCamera[]>(DEFAULT_CCTV);
+  const [authConfig, setAuthConfigState] = useState<AuthConfig>(DEFAULT_AUTH_CONFIG);
 
   const wargaRef = useRef<Warga[]>(DEFAULT_WARGA);
   const suratRef = useRef<Surat[]>(DEFAULT_SURAT);
@@ -304,6 +309,7 @@ export function Rw10Provider({ children }: { children: React.ReactNode }) {
       const localBerita = readLocal(STORAGE_KEYS.BERITA, DEFAULT_BERITA);
       const localUmkm = readLocal(STORAGE_KEYS.UMKM, DEFAULT_UMKM);
       const localCctv = readLocal(STORAGE_KEYS.CCTV, DEFAULT_CCTV);
+      const localAuth = readLocal(STORAGE_KEYS.AUTH_CONFIG, DEFAULT_AUTH_CONFIG);
       const localBg =
         typeof window !== 'undefined'
           ? window.localStorage.getItem(STORAGE_KEYS.HERO_BG) || DEFAULT_HERO_BG
@@ -326,6 +332,7 @@ export function Rw10Provider({ children }: { children: React.ReactNode }) {
         umkmRef.current = localUmkm;
         setUmkmState(localUmkm);
         setCctvState(localCctv);
+        setAuthConfigState(localAuth);
         setHeroBgState(localBg);
         setHydrated(true);
         return;
@@ -358,6 +365,7 @@ export function Rw10Provider({ children }: { children: React.ReactNode }) {
         const rtRow = settingsRows.find((r) => r.key === 'pengurus_rt');
         const bgRow = settingsRows.find((r) => r.key === 'hero_bg');
         const cctvRow = settingsRows.find((r) => r.key === 'cctv');
+        const authRow = settingsRows.find((r) => r.key === 'auth_config');
         const isSeeded = Boolean(settingsRows.find((r) => r.key === 'seeded_v1')?.value);
 
         if (rwRow?.value) {
@@ -385,6 +393,15 @@ export function Rw10Provider({ children }: { children: React.ReactNode }) {
         } else {
           await supabase.from('rw10_settings').upsert({ key: 'cctv', value: DEFAULT_CCTV });
           setCctvState(DEFAULT_CCTV);
+        }
+
+        if (authRow?.value && typeof authRow.value === 'object') {
+          setAuthConfigState(authRow.value as AuthConfig);
+        } else {
+          await supabase
+            .from('rw10_settings')
+            .upsert({ key: 'auth_config', value: DEFAULT_AUTH_CONFIG });
+          setAuthConfigState(DEFAULT_AUTH_CONFIG);
         }
 
         // Warga
@@ -688,6 +705,22 @@ export function Rw10Provider({ children }: { children: React.ReactNode }) {
     [showToast]
   );
 
+  const setAuthConfig = useCallback(
+    (cfg: AuthConfig) => {
+      setAuthConfigState(cfg);
+      writeLocal(STORAGE_KEYS.AUTH_CONFIG, cfg);
+      if (supabase) {
+        void supabase
+          .from('rw10_settings')
+          .upsert({ key: 'auth_config', value: cfg })
+          .then(({ error }) => {
+            if (error) showToast('Gagal menyimpan akun pengurus ke server.', 'error');
+          });
+      }
+    },
+    [showToast]
+  );
+
   const openModal = useCallback((id: ModalId) => {
     setActiveModal(id);
   }, []);
@@ -810,6 +843,8 @@ export function Rw10Provider({ children }: { children: React.ReactNode }) {
         setHeroBg,
         cctv,
         setCctv,
+        authConfig,
+        setAuthConfig,
         session,
         setSession,
         viewMode,

@@ -1,5 +1,6 @@
 import {
   Aduan,
+  AuthConfig,
   Berita,
   CctvCamera,
   PengurusRtMap,
@@ -22,6 +23,7 @@ export const STORAGE_KEYS = {
   UMKM: 'rw10_umkm',
   HERO_BG: 'rw10_hero_bg',
   CCTV: 'rw10_cctv',
+  AUTH_CONFIG: 'rw10_auth_config',
 } as const;
 
 export const DEFAULT_HERO_BG =
@@ -261,3 +263,57 @@ export const DEFAULT_CCTV: CctvCamera[] = [
     status: 'Online',
   },
 ];
+
+export const DEFAULT_AUTH_CONFIG: AuthConfig = {
+  showDemoButtons: true,
+  accounts: [
+    {
+      id: 'RW',
+      role: 'RW',
+      rtScope: null,
+      label: 'Pengurus RW 10',
+      username: 'admin',
+      password: 'admin123',
+    },
+    {
+      id: 'RT 01',
+      role: 'RT',
+      rtScope: 'RT 01',
+      label: 'Ketua RT 01',
+      username: 'rt01',
+      password: 'rt123',
+    },
+    {
+      id: 'RT 02',
+      role: 'RT',
+      rtScope: 'RT 02',
+      label: 'Ketua RT 02',
+      username: 'rt02',
+      password: 'rt123',
+    },
+    {
+      id: 'RT 03',
+      role: 'RT',
+      rtScope: 'RT 03',
+      label: 'Ketua RT 03',
+      username: 'rt03',
+      password: 'rt123',
+    },
+    {
+      id: 'RT 04',
+      role: 'RT',
+      rtScope: 'RT 04',
+      label: 'Ketua RT 04',
+      username: 'rt04',
+      password: 'rt123',
+    },
+    {
+      id: 'RT 05',
+      role: 'RT',
+      rtScope: 'RT 05',
+      label: 'Ketua RT 05',
+      username: 'rt05',
+      password: 'rt123',
+    },
+  ],
+};

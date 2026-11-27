@@ -38,6 +38,8 @@ export default function AdminDashboard() {
     setHeroBg,
     cctv,
     setCctv,
+    authConfig,
+    setAuthConfig,
     openModal,
     openWargaFormModal,
     openDeleteWargaModal,
@@ -88,6 +90,8 @@ export default function AdminDashboard() {
   const [umkmDeskripsi, setUmkmDeskripsi] = useState('');
   const [editingUmkmId, setEditingUmkmId] = useState<string | null>(null);
   const [cctvForm, setCctvForm] = useState(cctv);
+  const [authForm, setAuthForm] = useState(authConfig);
+  const [visiblePasswords, setVisiblePasswords] = useState<Record<string, boolean>>({});
 
   const isRt = session?.role === 'RT';
   const scopeRt = isRt ? session?.rtScope : null;
@@ -549,6 +553,17 @@ export default function AdminDashboard() {
               </button>
             </>
           )}
+
+          <button
+            type="button"
+            onClick={() => {
+              setAuthForm(authConfig);
+              selectTab('akun');
+            }}
+            className={navBtnClass('akun')}
+          >
+            <i className="fa-solid fa-key w-5 text-center text-amber-300" /> Akun &amp; Password
+          </button>
         </nav>
 
         <div className="p-3 border-t border-slate-800 space-y-2">
@@ -2244,6 +2259,201 @@ export default function AdminDashboard() {
                 </div>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* TAB 9: AKUN & PASSWORD PENGURUS */}
+        {adminTab === 'akun' && (
+          <div className="space-y-6">
+            <div>
+              <h1 className="text-2xl font-black text-slate-900">
+                Akun &amp; Password Pengurus
+              </h1>
+              <p className="text-sm text-slate-500">
+                {isRt
+                  ? `Ubah username dan password login untuk akun ${scopeRt}.`
+                  : 'Kelola username dan password login untuk Pengurus RW 10 serta Ketua RT 01 – RT 05.'}
+              </p>
+            </div>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                const cleanedAccounts = authForm.accounts.map((acc) => ({
+                  ...acc,
+                  username: acc.username.trim().toLowerCase(),
+                  password: acc.password.trim(),
+                }));
+
+                const hasEmpty = cleanedAccounts.some(
+                  (acc) => !acc.username || !acc.password
+                );
+                if (hasEmpty) {
+                  showToast('Username dan password tidak boleh kosong.', 'error');
+                  return;
+                }
+
+                const usernames = cleanedAccounts.map((a) => a.username);
+                if (new Set(usernames).size !== usernames.length) {
+                  showToast('Username antar pengurus tidak boleh sama.', 'error');
+                  return;
+                }
+
+                const nextCfg = {
+                  ...authForm,
+                  accounts: cleanedAccounts,
+                };
+                setAuthForm(nextCfg);
+                setAuthConfig(nextCfg);
+                showToast('Pengaturan akun & password pengurus berhasil disimpan!', 'success');
+              }}
+              className="space-y-5"
+            >
+              {!isRt && (
+                <div className="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div>
+                    <h3 className="font-bold text-slate-900 text-sm">
+                      Tombol Login Demo Cepat di Portal Publik
+                    </h3>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      Matikan opsi ini jika website sudah dipakai resmi oleh warga agar tombol demo
+                      1-klik tidak tampil di form login.
+                    </p>
+                  </div>
+                  <label className="inline-flex items-center gap-2.5 cursor-pointer shrink-0">
+                    <input
+                      type="checkbox"
+                      checked={authForm.showDemoButtons}
+                      onChange={(e) =>
+                        setAuthForm({ ...authForm, showDemoButtons: e.target.checked })
+                      }
+                      className="w-5 h-5 accent-emerald-600 rounded cursor-pointer"
+                    />
+                    <span className="text-xs font-bold text-slate-700">
+                      {authForm.showDemoButtons ? 'Ditampilkan' : 'Disembunyikan'}
+                    </span>
+                  </label>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {authForm.accounts
+                  .filter((acc) => !isRt || acc.rtScope === scopeRt)
+                  .map((acc) => {
+                    const isVisible = Boolean(visiblePasswords[acc.id]);
+                    return (
+                      <div
+                        key={acc.id}
+                        className={`bg-white rounded-3xl border shadow-sm p-5 space-y-3 ${
+                          acc.role === 'RW'
+                            ? 'border-emerald-200 bg-emerald-50/30 md:col-span-2'
+                            : 'border-slate-200/90'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold ${
+                                acc.role === 'RW'
+                                  ? 'bg-emerald-600 text-white'
+                                  : 'bg-sky-100 text-sky-700'
+                              }`}
+                            >
+                              <i
+                                className={`fa-solid ${
+                                  acc.role === 'RW' ? 'fa-user-shield' : 'fa-user-tie'
+                                }`}
+                              />
+                            </span>
+                            <div>
+                              <h4 className="font-extrabold text-slate-900 text-sm">
+                                {acc.label}
+                              </h4>
+                              <p className="text-[11px] text-slate-400">
+                                {acc.role === 'RW'
+                                  ? 'Akses penuh seluruh RW 10'
+                                  : `Akses khusus ${acc.rtScope}`}
+                              </p>
+                            </div>
+                          </div>
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600">
+                            {acc.id}
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-xs font-semibold text-slate-600 mb-1">
+                              Username Login
+                            </label>
+                            <input
+                              type="text"
+                              required
+                              value={acc.username}
+                              onChange={(e) => {
+                                const next = authForm.accounts.map((item) =>
+                                  item.id === acc.id
+                                    ? { ...item, username: e.target.value }
+                                    : item
+                                );
+                                setAuthForm({ ...authForm, accounts: next });
+                              }}
+                              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-sm font-mono outline-none focus:ring-2 focus:ring-emerald-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-semibold text-slate-600 mb-1">
+                              Password
+                            </label>
+                            <div className="relative">
+                              <input
+                                type={isVisible ? 'text' : 'password'}
+                                required
+                                value={acc.password}
+                                onChange={(e) => {
+                                  const next = authForm.accounts.map((item) =>
+                                    item.id === acc.id
+                                      ? { ...item, password: e.target.value }
+                                      : item
+                                  );
+                                  setAuthForm({ ...authForm, accounts: next });
+                                }}
+                                className="w-full pl-3.5 pr-10 py-2.5 rounded-xl border border-slate-300 bg-white text-sm font-mono outline-none focus:ring-2 focus:ring-emerald-500"
+                              />
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setVisiblePasswords((prev) => ({
+                                    ...prev,
+                                    [acc.id]: !prev[acc.id],
+                                  }))
+                                }
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs"
+                                title={isVisible ? 'Sembunyikan' : 'Lihat Password'}
+                              >
+                                <i
+                                  className={`fa-solid ${
+                                    isVisible ? 'fa-eye-slash' : 'fa-eye'
+                                  }`}
+                                />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+
+              <div className="flex justify-end">
+                <button
+                  type="submit"
+                  className="px-6 py-3 rounded-2xl bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold text-sm shadow transition flex items-center gap-2"
+                >
+                  <i className="fa-solid fa-floppy-disk" /> Simpan Pengaturan Akun
+                </button>
+              </div>
+            </form>
           </div>
         )}
       </main>

@@ -124,6 +124,20 @@ export interface AdminSession {
   label: string;
 }
 
+export interface PengurusAccount {
+  id: string;
+  role: 'RW' | 'RT';
+  rtScope: RtKey | null;
+  label: string;
+  username: string;
+  password: string;
+}
+
+export interface AuthConfig {
+  accounts: PengurusAccount[];
+  showDemoButtons: boolean;
+}
+
 export type AdminTab =
   | 'dashboard'
   | 'warga'
@@ -132,7 +146,8 @@ export type AdminTab =
   | 'keuangan'
   | 'pengurus-rw'
   | 'pengurus-rt'
-  | 'konten';
+  | 'konten'
+  | 'akun';
 
 export type ModalId =
   | 'modal-sejarah'
