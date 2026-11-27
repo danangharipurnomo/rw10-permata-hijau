@@ -358,6 +358,7 @@ export function Rw10Provider({ children }: { children: React.ReactNode }) {
         const rtRow = settingsRows.find((r) => r.key === 'pengurus_rt');
         const bgRow = settingsRows.find((r) => r.key === 'hero_bg');
         const cctvRow = settingsRows.find((r) => r.key === 'cctv');
+        const isSeeded = Boolean(settingsRows.find((r) => r.key === 'seeded_v1')?.value);
 
         if (rwRow?.value) {
           setPengurusRwState(rwRow.value as PengurusRw);
@@ -387,7 +388,7 @@ export function Rw10Provider({ children }: { children: React.ReactNode }) {
         }
 
         // Warga
-        if (wargaRes.data && wargaRes.data.length > 0) {
+        if (wargaRes.data && (wargaRes.data.length > 0 || isSeeded)) {
           const list = wargaRes.data.map(mapWargaFromDb);
           wargaRef.current = list;
           setWargaState(list);
@@ -398,7 +399,7 @@ export function Rw10Provider({ children }: { children: React.ReactNode }) {
         }
 
         // Surat
-        if (suratRes.data && suratRes.data.length > 0) {
+        if (suratRes.data && (suratRes.data.length > 0 || isSeeded)) {
           const list = suratRes.data.map(mapSuratFromDb);
           suratRef.current = list;
           setSuratState(list);
@@ -409,7 +410,7 @@ export function Rw10Provider({ children }: { children: React.ReactNode }) {
         }
 
         // Aduan
-        if (aduanRes.data && aduanRes.data.length > 0) {
+        if (aduanRes.data && (aduanRes.data.length > 0 || isSeeded)) {
           const list = aduanRes.data as Aduan[];
           aduanRef.current = list;
           setAduanState(list);
@@ -420,7 +421,7 @@ export function Rw10Provider({ children }: { children: React.ReactNode }) {
         }
 
         // Keuangan
-        if (keuanganRes.data && keuanganRes.data.length > 0) {
+        if (keuanganRes.data && (keuanganRes.data.length > 0 || isSeeded)) {
           const list = keuanganRes.data.map((t) => ({
             id: String(t.id),
             tanggal: String(t.tanggal),
@@ -437,7 +438,7 @@ export function Rw10Provider({ children }: { children: React.ReactNode }) {
         }
 
         // Berita
-        if (beritaRes.data && beritaRes.data.length > 0) {
+        if (beritaRes.data && (beritaRes.data.length > 0 || isSeeded)) {
           const list = beritaRes.data as Berita[];
           beritaRef.current = list;
           setBeritaState(list);
@@ -448,7 +449,7 @@ export function Rw10Provider({ children }: { children: React.ReactNode }) {
         }
 
         // UMKM
-        if (umkmRes.data && umkmRes.data.length > 0) {
+        if (umkmRes.data && (umkmRes.data.length > 0 || isSeeded)) {
           const list = umkmRes.data as Umkm[];
           umkmRef.current = list;
           setUmkmState(list);
@@ -456,6 +457,10 @@ export function Rw10Provider({ children }: { children: React.ReactNode }) {
           await supabase.from('rw10_umkm').upsert(DEFAULT_UMKM);
           umkmRef.current = DEFAULT_UMKM;
           setUmkmState(DEFAULT_UMKM);
+        }
+
+        if (!isSeeded) {
+          await supabase.from('rw10_settings').upsert({ key: 'seeded_v1', value: true });
         }
       } catch {
         // Fallback to local if network fails
